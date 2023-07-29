@@ -65,12 +65,6 @@ public class PumpAi extends PumpAiBase {
             return SpecialAiLogic.doAristocratLogic(ai, sa);
         } else if (aiLogic.startsWith("AristocratCounters")) {
             return SpecialAiLogic.doAristocratWithCountersLogic(ai, sa);
-        } else if (aiLogic.equals("SwitchPT")) {
-            // Some more AI would be even better, but this is a good start to prevent spamming
-            if (sa.isActivatedAbility() && sa.getActivationsThisTurn() > 0 && !sa.usesTargeting()) {
-                // Will prevent flipping back and forth
-                return false;
-            }
         }
 
         return super.checkAiLogic(ai, sa, aiLogic);
@@ -91,11 +85,6 @@ public class PumpAi extends PumpAiBase {
             if (!ph.is(PhaseType.COMBAT_DECLARE_BLOCKERS) && !isThreatened) {
                 return false;
             }
-        } else if (logic.equals("SwitchPT")) {
-            // Some more AI would be even better, but this is a good start to prevent spamming
-            if (ph.getPhase().isAfter(PhaseType.COMBAT_FIRST_STRIKE_DAMAGE) || !ph.inCombat()) {
-                return false;
-            }
         }
         return super.checkPhaseRestrictions(ai, sa, ph);
     }
@@ -109,6 +98,12 @@ public class PumpAi extends PumpAiBase {
                 return false;
             }
             if (ph.getPhase().isBefore(PhaseType.COMBAT_BEGIN) && ph.getPlayerTurn().isOpponentOf(ai)) {
+                return false;
+            }
+        }
+        if (sa.hasParam("SwitchPT")) {
+            // Some more AI would be even better, but this is a good start to prevent spamming
+            if (ph.getPhase().isAfter(PhaseType.COMBAT_FIRST_STRIKE_DAMAGE) || !ph.inCombat()) {
                 return false;
             }
         }
@@ -256,6 +251,14 @@ public class PumpAi extends PumpAiBase {
             }
         }
 
+        if (sa.hasParam("SwitchPT")) {
+            // Some more AI would be even better, but this is a good start to prevent spamming
+            if (sa.isActivatedAbility() && sa.getActivationsThisTurn() > 0 && !sa.usesTargeting()) {
+                // Will prevent flipping back and forth
+                return false;
+            }
+        }
+
         if (ComputerUtil.preventRunAwayActivations(sa)) {
             return false;
         }
@@ -364,7 +367,7 @@ public class PumpAi extends PumpAiBase {
     } // pumpPlayAI()
 
     private boolean pumpTgtAI(final Player ai, final SpellAbility sa, final int defense, final int attack, final boolean mandatory,
-    		boolean immediately) {
+                boolean immediately) {
         final List<String> keywords = sa.hasParam("KW") ? Arrays.asList(sa.getParam("KW").split(" & "))
                 : Lists.newArrayList();
         final Game game = ai.getGame();
